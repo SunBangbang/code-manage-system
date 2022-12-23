@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CmmnCdVlMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CmmnCdVlM">
+        <id column="cv_cd_id" property="cvCdId" />
+        <result column="cv_cdvl_id" property="cvCdvlId" />
+        <result column="cdvl_nm" property="cdvlNm" />
+        <result column="cdvl_expl_txt" property="cdvlExplTxt" />
+    </resultMap>
+
+</mapper>

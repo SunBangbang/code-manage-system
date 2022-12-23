@@ -1,0 +1,110 @@
+/*dialog样式*/
+@mainColor: #324157;
+.distributeCommon() {
+  background: #fff;
+  max-height: 400px;
+  overflow-y: auto;
+  min-height: 250px;
+}
+.el-dialog {
+  .el-dialog__header {
+    padding-top: 8px;
+    padding-bottom: 8px;
+    margin: 0;
+    background: @mainColor;
+    .el-dialog__title {
+      color: #fff;
+    }
+  }
+
+  .el-dialog__body {
+    padding: 10px;
+    background: #f3f3f3;
+    .el-form {
+      padding: 15px;
+      background: #fff;
+      .border {
+        height: 10px;
+        background: #f3f3f3;
+        width: calc(100% + 50px);
+        margin-left: -25px;
+        margin-bottom: 25px;
+      }
+      .border-short {
+        height: 10px;
+        background: #f3f3f3;
+        width: calc(100% + 50px);
+        margin-left: -25px;
+        margin-bottom: 10px;
+      }
+      .border-opera {
+        text-align: right;
+        margin-bottom: 5px;
+        .el-icon:not(:last-child) {
+          margin-right: 5px;
+        }
+      }
+    }
+
+    .set-menu {
+      .el-tree {
+        padding: 10px;
+      }
+    }
+
+    .program-div {
+      max-height: 300px;
+    }
+
+    .special-form {
+      display: flex;
+      .el-button {
+        width: 100px;
+        margin-left: 10px;
+      }
+      .el-input {
+        flex: 1;
+      }
+    }
+
+    .distribute {
+      display: flex;
+      .distribute-left {
+        margin-right: 10px;
+        width: calc(50% + 15px);
+        padding: 10px 0;
+        .distributeCommon;
+      }
+      ul {
+        width: calc(50% - 15px);
+        padding: 10px;
+        .distributeCommon;
+        li {
+          height: 30px;
+          line-height: 30px;
+          background: #324157;
+          color: #fff;
+          padding-left: 10px;
+        }
+        li:not(:last-child) {
+          margin-bottom: 4px;
+        }
+      }
+    }
+  }
+
+
+  .el-dialog__footer {
+    padding-bottom: 10px;
+  }
+
+  .el-dialog__headerbtn {
+    height: 16px;
+    width: 16px;
+    top: 16px;
+    right: 16px;
+    .el-icon.el-dialog__close {
+      color: #fff;
+    }
+  }
+}

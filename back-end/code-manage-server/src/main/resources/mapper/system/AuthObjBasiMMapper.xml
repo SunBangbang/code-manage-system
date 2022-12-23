@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.AuthObjBasiMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.AuthObjBasiM">
+        <id column="cv_auth_obj_id" property="cvAuthObjId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="auth_obj_nm" property="authObjNm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="cv_ui_id" property="cvUiId" />
+        <result column="auth_obj_expl_txt" property="authObjExplTxt" />
+        <result column="cv_auth_obj_dsts_cd" property="cvAuthObjDstsCd" />
+        <result column="hlv_cv_auth_obj_id" property="hlvCvAuthObjId" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+        <result column="dspl_srno" property="dsplSrno" />
+        <result column="menu_usg_yn" property="menuUsgYn" />
+    </resultMap>
+
+    <select id="getAuthObjTree" resultType="com.codemanage.system.dto.response.AuthTreeDto"
+            parameterType="java.lang.String">
+        WITH RECURSIVE cvso_auth_obj_basi_m_tree ( cv_auth_obj_id, rec_fnsh_dttm, rec_bgn_dttm, auth_obj_nm, cv_ui_id,
+            auth_obj_expl_txt, cv_auth_obj_dsts_cd, hlv_cv_auth_obj_id, fnl_yn, cret_cv_user_id, dspl_srno, menu_usg_yn ) AS (
+            SELECT
+                cv_auth_obj_id,
+                rec_fnsh_dttm,
+                rec_bgn_dttm,
+                auth_obj_nm,
+                cv_ui_id,
+                auth_obj_expl_txt,
+                cv_auth_obj_dsts_cd,
+                hlv_cv_auth_obj_id,
+                fnl_yn,
+                cret_cv_user_id,
+                dspl_srno,
+                menu_usg_yn
+            FROM
+                cvso_auth_obj_basi_m
+            WHERE
+                rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+              AND hlv_cv_auth_obj_id = '0'
+              AND cv_auth_obj_dsts_cd IN
+                <foreach collection="dstsCdList" item="dstsCd" open="(" separator="," close=")">
+                    #{dstsCd}
+                </foreach>
+            UNION ALL
+            SELECT
+                C.cv_auth_obj_id,
+                C.rec_fnsh_dttm,
+                C.rec_bgn_dttm,
+                C.auth_obj_nm,
+                C.cv_ui_id,
+                C.auth_obj_expl_txt,
+                C.cv_auth_obj_dsts_cd,
+                C.hlv_cv_auth_obj_id,
+                C.fnl_yn,
+                C.cret_cv_user_id,
+                C.dspl_srno,
+                C.menu_usg_yn
+            FROM
+                cvso_auth_obj_basi_m_tree
+                    A JOIN cvso_auth_r b ON A.cv_auth_obj_id = b.hlv_cv_auth_obj_id
+                    AND b.llv_cv_auth_obj_dsts_cd IN
+                        <foreach collection="dstsCdList" item="dstsCd" open="(" separator="," close=")">
+                            #{dstsCd}
+                        </foreach>
+                    AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                      JOIN cvso_auth_obj_basi_m C ON b.llv_cv_auth_obj_id = C.cv_auth_obj_id
+                    AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        )
+        SELECT
+            cv_auth_obj_id AS id,
+            auth_obj_nm AS name,
+            cv_ui_id  AS cvUiId,
+            dspl_srno  AS dsplSrno,
+            hlv_cv_auth_obj_id AS parentId,
+            menu_usg_yn  AS menuUsgYn,
+            cv_auth_obj_dsts_cd AS cvAuthObjDstsCd,
+            auth_obj_expl_txt  AS authObjExplTxt
+        FROM
+            cvso_auth_obj_basi_m_tree
+            <if test="null != name and '' != name">
+                where auth_obj_nm like concat('%',#{name},'%')
+            </if>
+            order by dspl_srno;
+    </select>
+
+    <select id="checkUiId" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT( * ) AS cnt
+        FROM
+            cvso_auth_obj_basi_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_ui_id = #{uiId}
+          AND cv_auth_obj_dsts_cd IN ( '1010', '1020' );
+    </select>
+
+    <select id="checkAuthName" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT( * ) AS cnt
+        FROM
+            cvso_auth_obj_basi_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND auth_obj_nm = #{name}
+          AND cv_auth_obj_dsts_cd IN ( '1010', '1020' );
+    </select>
+
+    <select id="getChildIdsById" resultType="java.lang.String" parameterType="java.lang.String">
+        WITH RECURSIVE cvso_auth_obj_basi_m_tree ( cv_auth_obj_id ) AS (
+            SELECT
+                cv_auth_obj_id
+            FROM
+                cvso_auth_obj_basi_m
+            WHERE
+                rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+              AND cv_auth_obj_id = #{id}
+              AND cv_auth_obj_dsts_cd IN ( '1010', '1020' )
+            UNION ALL
+            SELECT C.cv_auth_obj_id
+            FROM
+                cvso_auth_obj_basi_m_tree
+                    A JOIN cvso_auth_r b ON A.cv_auth_obj_id = b.hlv_cv_auth_obj_id
+                    AND b.llv_cv_auth_obj_dsts_cd IN ( '1010', '1020' )
+                    AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                      JOIN cvso_auth_obj_basi_m C ON b.llv_cv_auth_obj_id = C.cv_auth_obj_id
+                    AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        )
+        SELECT
+            cv_auth_obj_id
+        FROM
+            cvso_auth_obj_basi_m_tree;
+    </select>
+
+    <select id="getAuthObjList" resultType="com.codemanage.system.dto.response.AuthTreeDto">
+        WITH RECURSIVE cvso_auth_obj_basi_m_tree ( cv_auth_obj_id, auth_obj_nm, cv_ui_id, auth_obj_expl_txt, cv_auth_obj_dsts_cd, hlv_cv_auth_obj_id, dspl_srno, menu_usg_yn ) AS (
+            SELECT
+                cv_auth_obj_id,
+                auth_obj_nm,
+                cv_ui_id,
+                auth_obj_expl_txt,
+                cv_auth_obj_dsts_cd,
+                hlv_cv_auth_obj_id,
+                dspl_srno,
+                menu_usg_yn
+            FROM
+                cvso_auth_obj_basi_m
+            WHERE
+                rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+              AND hlv_cv_auth_obj_id = '0'
+              AND cv_auth_obj_dsts_cd IN ( '1010', '1020' )
+              AND menu_usg_yn = 'Y'
+            UNION ALL
+            SELECT
+                C.cv_auth_obj_id,
+                C.auth_obj_nm,
+                C.cv_ui_id,
+                C.auth_obj_expl_txt,
+                C.cv_auth_obj_dsts_cd,
+                C.hlv_cv_auth_obj_id,
+                C.dspl_srno,
+                C.menu_usg_yn
+            FROM
+                cvso_auth_obj_basi_m_tree
+                    A JOIN cvso_auth_r b ON A.cv_auth_obj_id = b.hlv_cv_auth_obj_id
+                    AND b.llv_cv_auth_obj_dsts_cd IN ( '1010', '1020' )
+                    AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                      JOIN cvso_auth_obj_basi_m C ON b.llv_cv_auth_obj_id = C.cv_auth_obj_id
+                    AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                    AND C.menu_usg_yn = 'Y'
+        )
+
+        SELECT
+            cv_auth_obj_id AS id,
+            auth_obj_nm AS name,
+            cv_ui_id  AS cvUiId,
+            dspl_srno  AS dsplSrno,
+            menu_usg_yn AS menuYsgYn,
+            auth_obj_expl_txt AS authObjExplTxt,
+            cv_auth_obj_dsts_cd AS cvAuthObjDstsCd,
+            hlv_cv_auth_obj_id AS parentId
+        FROM
+            cvso_auth_obj_basi_m_tree;
+    </select>
+
+</mapper>

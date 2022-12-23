@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.RoleRMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.RoleR">
+        <result column="llv_cv_user_id" property="llvCvUserId" />
+        <result column="hlv_cv_user_id" property="hlvCvUserId" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="hlv_cv_user_dsts_cd" property="hlvCvUserDstsCd" />
+        <result column="llv_cv_user_dsts_cd" property="llvCvUserDstsCd" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+    <insert id="insertByDeptDelete">
+        insert into
+            cvso_role_r (
+                  hlv_cv_user_id
+                 ,llv_cv_user_id
+                 ,rec_fnsh_dttm
+                 ,rec_bgn_dttm
+                 ,hlv_cv_user_dsts_cd
+                 ,llv_cv_user_dsts_cd
+                 ,fnl_yn
+                 ,cret_cv_user_id
+            )
+        select (
+            case llv_cv_user_dsts_cd
+                when '0100'
+                    then '0'
+                when '0200'
+                    then hlv_cv_user_id
+                end
+            ) as hlv_cv_user_id
+             ,llv_cv_user_id
+            (
+            case llv_cv_user_dsts_cd
+                when '0100'
+                    then '9999-12-31 00:00:00.000000'
+                when '0200'
+                    then ${newBgnDttm}
+             end
+            ) as rec_fnsh_dttm
+             ,llv_cv_user_id
+             ,${newBgnDttm}
+             ,hlv_cv_user_dsts_cd
+             ,llv_cv_user_dsts_cd
+             ,(
+            case llv_cv_user_dsts_cd
+                when '0100'
+                    then 'Y'
+                when '0200'
+                    then 'N'
+                end
+            ) as fnl_yn
+             ,${createUserId}
+        from   cvso_role_r
+        where
+            (llv_cv_user_id in
+                <foreach collection="idList" item="id" separator="," open="(" close=")">
+                    #{id}
+                </foreach>
+            or hlv_cv_user_id in
+                <foreach collection="idList" item="id" separator="," open="(" close=")">
+                    #{id}
+                </foreach>
+            )
+        and (hlv_cv_user_dsts_cd in ('0100','0200')
+            or	llv_cv_user_dsts_cd in ('0100','0200')
+            )
+        and rec_fnsh_dttm = #{oldFnshDttm}
+    </insert>
+
+    <insert id="insertByRoleDelete">
+        insert into  cvso_role_r
+            (
+              hlv_cv_user_id
+             ,llv_cv_user_id
+             ,rec_fnsh_dttm
+             ,rec_bgn_dttm
+             ,hlv_cv_user_dsts_cd
+             ,llv_cv_user_dsts_cd
+             ,fnl_yn
+             ,cret_cv_user_id
+            )
+        select
+              hlv_cv_user_id
+             ,llv_cv_user_id
+             ,${newBgnDttm}
+             ,${newBgnDttm}
+             ,hlv_cv_user_dsts_cd
+             ,llv_cv_user_dsts_cd
+             ,'N'
+             ,${createUserId}
+        from  cvso_role_r
+        where
+            hlv_cv_user_id = #{id}
+          and rec_fnsh_dttm = #{oldFnshDttm}
+
+    </insert>
+
+    <select id="getRoleIdsByUserId" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT
+            hlv_cv_user_id
+        FROM
+            cvso_role_r
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND llv_cv_user_id = #{userId}
+          AND hlv_cv_user_dsts_cd = '0300'
+    </select>
+    <select id="getUserIdsByRoleId" resultType="java.lang.String" parameterType="java.lang.String">
+        SELECT
+            llv_cv_user_id
+        FROM
+            cvso_role_r
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND hlv_cv_user_id = #{roleId}
+          AND llv_cv_user_dsts_cd = '0100'
+
+    </select>
+
+    <insert id="insertByUserRoleDelete">
+        INSERT INTO
+            cvso_role_r (
+             hlv_cv_user_id
+            ,llv_cv_user_id
+            ,rec_fnsh_dttm
+            ,rec_bgn_dttm
+            ,hlv_cv_user_dsts_cd
+            ,llv_cv_user_dsts_cd
+            ,fnl_yn
+            ,cret_cv_user_id
+        )
+        SELECT
+              hlv_cv_user_id
+             ,llv_cv_user_id
+             ,${newBgnDttm}
+             ,${newBgnDttm}
+             ,hlv_cv_user_dsts_cd
+             ,llv_cv_user_dsts_cd
+             ,'N'
+             ,${createUserId}
+        FROM
+            cvso_role_r
+        WHERE
+                llv_cv_user_id = #{userId}
+          AND   hlv_cv_user_id IN
+                <foreach collection="roleIds" item="roleId" open="(" separator="," close=")">
+                    #{roleId}
+                </foreach>
+          AND rec_fnsh_dttm = #{oldFnshDttm}
+
+
+
+    </insert>
+
+    <insert id="insertByUserDelete">
+        INSERT INTO
+            cvso_role_r
+                ( hlv_cv_user_id,
+                  llv_cv_user_id,
+                  rec_fnsh_dttm,
+                  rec_bgn_dttm,
+                  hlv_cv_user_dsts_cd,
+                  llv_cv_user_dsts_cd,
+                  fnl_yn,
+                  cret_cv_user_id
+                )
+        SELECT
+            hlv_cv_user_id,
+            llv_cv_user_id,
+            ${newBgnDttm},
+            ${newBgnDttm},
+            hlv_cv_user_dsts_cd,
+            llv_cv_user_dsts_cd,
+            'N',
+            ${createUserId}
+        FROM
+            cvso_role_r
+        WHERE
+            llv_cv_user_id =  #{userId}
+          AND rec_fnsh_dttm = #{oldFnshDttm}
+
+    </insert>
+
+</mapper>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CdMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CdM">
+        <id column="cv_cd_id" property="cvCdId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="cv_cd_sphr_id" property="cvCdSphrId" />
+        <result column="cv_cd_cat_id" property="cvCdCatId" />
+        <result column="cd_lgc_nm" property="cdLgcNm" />
+        <result column="cd_phys_nm" property="cdPhysNm" />
+        <result column="cdvl_save_yn" property="cdvlSaveYn" />
+        <result column="cv_cd_tp_cd" property="cvCdTpCd" />
+        <result column="blng_cv_sys_id" property="blngCvSysId" />
+        <result column="cv_ref_id" property="cvRefId" />
+        <result column="data_tp_nm" property="dataTpNm" />
+        <result column="data_len" property="dataLen" />
+        <result column="cd_expl_txt" property="cdExplTxt" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+        <result column="cv_cd_st_cd" property="cvCdStCd" />
+    </resultMap>
+
+    <select id="listCdM" resultType="com.codemanage.code.dto.response.CdMVo">
+        select * from ( <include refid="selectVo"/> ) t1
+        WHERE 1 = 1
+        <if test="null != dto">
+            <if test="null != dto.cdSphrNm and '' != dto.cdSphrNm">
+                AND cd_sphr_nm = #{dto.cdSphrNm}
+            </if>
+            <if test="null != dto.cvCdId and '' != dto.cvCdId">
+                AND cv_cd_id like concat('%',#{dto.cvCdId},'%')
+            </if>
+            <if test="null != dto.cdLgcNm and '' != dto.cdLgcNm">
+                AND cd_lgc_nm like concat('%',#{dto.cdLgcNm},'%')
+            </if>
+            <if test="null != dto.cdPhysNm and '' != dto.cdPhysNm">
+                AND cd_phys_nm like concat('%',#{dto.cdPhysNm},'%')
+            </if>
+            <if test="null != dto.cdExplTxt and '' != dto.cdExplTxt">
+                AND cd_expl_txt like concat('%',#{dto.cdExplTxt},'%')
+            </if>
+            <if test="null != dto.cdCatNm and '' != dto.cdCatNm">
+                AND cd_cat_nm = #{dto.cdCatNm}
+            </if>
+            <if test="null != dto.cdvlSaveYn and '' != dto.cdvlSaveYn">
+                AND cdvl_save_yn = #{dto.cdvlSaveYn}
+            </if>
+            <if test="null != dto.blngCvSysId and '' != dto.blngCvSysId">
+                AND blng_cv_sys_id = #{dto.blngCvSysId}
+            </if>
+            <if test="null != dto.dataTpNm and '' != dto.dataTpNm">
+                AND data_tp_nm = #{dto.dataTpNm}
+            </if>
+            <if test="null != dto.cvCdTpCd and '' != dto.cvCdTpCd">
+                AND cv_cd_tp_cd = #{dto.cvCdTpCd}
+            </if>
+            <if test="null != dto.cvCdStCd and '' != dto.cvCdStCd">
+                AND cv_cd_st_cd = #{dto.cvCdStCd}
+            </if>
+        </if>
+
+    </select>
+
+    <!-- 根据id查询编码 -->
+    <select id="getCdMById" resultType="com.codemanage.code.dto.response.CdMVo" parameterType="java.lang.String">
+        <include refid="selectVo"/>
+        WHERE cv_cd_id = #{id}
+    </select>
+
+    <select id="getCodeCodeRelation" resultType="com.codemanage.code.dto.response.CodeCodeRelationVo"
+            parameterType="com.codemanage.code.dto.request.CdPptyMQueryDto">
+        select  a.cv_cd_id
+             ,b.hlv_cv_cd_id
+             ,b.llv_cv_cd_id
+             ,(case when cv_cd_id = b.hlv_cv_cd_id then '上级'
+                   when cv_cd_id = b.llv_cv_cd_id then '下级'
+            end) as hierarchy
+             ,a.cv_cd_cat_id
+             ,(select cd_cat_nm from cvcd_cd_cat_m where a.cv_cd_cat_id = cv_cd_cat_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') as cd_cat_nm
+             ,a.cd_lgc_nm
+             ,a.cd_phys_nm
+             --,(select cdvl_nm from cvcd_cmmn_cd_vl_m where cv_cd_id = '00003' and  cv_cdvl_id = a.data_tp_nm ) as data_tp_nm
+             ,a.data_tp_nm
+             ,a.data_len
+             --,(select cdvl_nm from cvcd_cmmn_cd_vl_m where cv_cd_id = '00001' and  cv_cdvl_id = a.cv_cd_st_cd ) as cv_cd_st_cd
+             ,a.cv_cd_st_cd
+             --,(select cdvl_nm from cvcd_cmmn_cd_vl_m where cv_cd_id = '00002' and  cv_cdvl_id = a.cv_cd_tp_cd ) as cv_cd_tp_cd
+             ,a.cv_cd_tp_cd
+             ,a.cdvl_save_yn
+             ,a.cv_ref_id
+             ,a.blng_cv_sys_id
+             ,(select sys_nm from cvso_sys_m where a.blng_cv_sys_id = cv_sys_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') as blng_cv_sys_nm
+             ,(case when cv_cd_id != b.hlv_cv_cd_id then (select cd_lgc_nm from cvcd_cd_m where b.hlv_cv_cd_id = cv_cd_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000' limit 1) else '' end) AS hlv_cd_lgc_nm
+             ,a.cd_expl_txt
+        from    cvcd_cd_m a
+                    join    cvcd_cd_r b
+                            on      (a.cv_cd_id = b.llv_cv_cd_id or a.cv_cd_id = b.hlv_cv_cd_id)
+                                and     a.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                                and     b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                                and  b.cv_cd_rlts_cd = '0100'
+                                and  (b.llv_cv_cd_id = #{dto.cvCdId} or b.hlv_cv_cd_id = #{dto.cvCdId})
+                                and     a.cv_cd_id != #{dto.cvCdId}
+                                --and     a.cv_cd_id = {dto.cvCdId}
+    </select>
+
+    <select id="getCodeAttributeRelation" resultType="com.codemanage.code.dto.response.CodeAttributeRelationVo"
+            parameterType="com.codemanage.code.dto.request.CdPptyMQueryDto">
+        select
+            pr.*,
+            COALESCE(hp.cd_ppty_nm, '=100') as hlv_cd_ppty_nm,
+            COALESCE(lp.cd_ppty_nm, '=100') as llv_cd_ppty_nm,
+            (select cd_lgc_nm from cvcd_cd_m where cv_cd_id = pr.hlv_cv_cd_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') as hlv_cd_lgc_nm,
+            (select cd_lgc_nm from cvcd_cd_m where cv_cd_id = pr.llv_cv_cd_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') as llv_cd_lgc_nm
+        from
+            cvcd_cd_ppty_r pr
+                left outer join cvcd_cd_ppty_m hp on pr.hlv_cv_cd_ppty_id = hp.cv_cd_ppty_id and hp.cv_cd_id = pr.hlv_cv_cd_id and hp.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                left outer join cvcd_cd_ppty_m lp on pr.llv_cv_cd_ppty_id = lp.cv_cd_ppty_id and lp.cv_cd_id = pr.llv_cv_cd_id and lp.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        where
+            (pr.hlv_cv_cd_id = #{dto.cvCdId} or pr.llv_cv_cd_id = #{dto.cvCdId}) and
+            pr.rec_fnsh_dttm = '9999-12-31 00:00:00.000000';
+    </select>
+
+
+    <sql id="selectVo">
+        SELECT
+            A.cv_cd_id,
+            A.cv_cd_sphr_id,
+            ( SELECT cd_sphr_nm FROM cvcd_cd_sphr_m WHERE A.cv_cd_sphr_id = cv_cd_sphr_id AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS cd_sphr_nm,
+            A.cv_cd_cat_id,
+            ( SELECT cd_cat_nm FROM cvcd_cd_cat_m WHERE A.cv_cd_cat_id = cv_cd_cat_id AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS cd_cat_nm,
+            A.cd_lgc_nm,
+            A.cd_phys_nm,
+            A.cv_cd_id AS cv_cd_tp_cd_id,
+            --( SELECT cdvl_nm FROM cvcd_cdvl_m WHERE A.cv_cd_id = cv_cd_id AND A.cv_cd_tp_cd = cd_vl AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS cv_cd_tp_cd,
+            A.cv_cd_tp_cd,
+            A.cv_cd_id AS data_tp_nm_id,
+            --( SELECT cdvl_nm FROM cvcd_cdvl_m WHERE A.cv_cd_id = cv_cd_id AND A.data_tp_nm = cd_vl AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS data_tp_nm,
+            A.data_tp_nm,
+            A.data_len,
+            A.hlv_cv_cd_id,
+            --(select hlv_cv_cd_id from cvcd_cd_r where a.cv_cd_id = llv_cv_cd_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000' limit 1) AS hlv_cv_cd_id ,
+            (select cd_lgc_nm from cvcd_cd_m where rec_fnsh_dttm = '9999-12-31 00:00:00.000000' and cv_cd_id = a.hlv_cv_cd_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000' limit 1) AS hlv_cd_lgc_nm,
+            A.cd_expl_txt,
+            A.cv_cd_id AS cv_cd_st_cd_id,
+            --( SELECT cdvl_nm FROM cvcd_cdvl_m WHERE A.cv_cd_id = cv_cd_id AND A.cv_cd_st_cd = cd_vl AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS cv_cd_st_cd,
+            A.cv_cd_st_cd,
+            A.cdvl_save_yn,
+            A.cv_ref_id,
+            A.blng_cv_sys_id,
+            ( SELECT sys_nm FROM cvso_sys_m WHERE A.blng_cv_sys_id = cv_sys_id AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS blng_cv_sys_nm,
+            A.cret_cv_user_id,
+            ( SELECT user_nm FROM cvso_user_basi_m WHERE A.cret_cv_user_id = cv_user_id AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS cret_cv_user_nm
+        FROM
+            cvcd_cd_m A where A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        order by a.rec_bgn_dttm desc
+    </sql>
+
+</mapper>

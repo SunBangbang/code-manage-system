@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CdSphrMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CdSphrM">
+        <id column="cv_cd_sphr_id" property="cvCdSphrId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="cd_sphr_nm" property="cdSphrNm" />
+        <result column="cv_cd_sphr_dsts_cd" property="cvCdSphrDstsCd" />
+        <result column="cd_sphr_expl_txt" property="cdSphrExplTxt" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="hlv_cv_cd_sphr_id" property="hlvCvCdSphrId" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+    <select id="getSphrMList" resultType="com.codemanage.code.dto.response.CdSphrMVo"
+            parameterType="com.codemanage.code.dto.request.CdSphrMQueryDto">
+        WITH RECURSIVE cvcd_cd_sphr_m_tree ( cv_cd_sphr_id, cd_sphr_nm, cd_sphr_expl_txt, hlv_cv_cd_sphr_id ) AS (
+            SELECT
+                A.cv_cd_sphr_id,
+                A.cd_sphr_nm,
+                A.cd_sphr_expl_txt,
+                A.hlv_cv_cd_sphr_id
+            FROM
+                cvcd_cd_sphr_m A
+            WHERE
+                A.cv_cd_sphr_dsts_cd = '0010'
+              AND A.hlv_cv_cd_sphr_id = '0'
+              AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            UNION ALL
+            SELECT
+                b.cv_cd_sphr_id,
+                b.cd_sphr_nm,
+                b.cd_sphr_expl_txt,
+                b.hlv_cv_cd_sphr_id
+            FROM
+                cvcd_cd_sphr_m b
+                    JOIN cvcd_cd_sphr_m_tree C ON b.hlv_cv_cd_sphr_id = C.cv_cd_sphr_id
+                    AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        )
+
+        SELECT
+            cv_cd_sphr_id,
+            cd_sphr_nm,
+            cd_sphr_expl_txt,
+            hlv_cv_cd_sphr_id
+        FROM
+            cvcd_cd_sphr_m_tree
+        <if test="null != dto">
+            where 1 = 1
+            <if test="null != dto.cdSphrNm and '' != dto.cdSphrNm">
+                AND cd_sphr_nm like concat('%',#{dto.cdSphrNm},'%')
+            </if>
+        </if>
+    </select>
+
+    <select id="getVoById" resultType="com.codemanage.code.dto.response.CdSphrMVo"
+            parameterType="java.lang.String">
+        SELECT
+            A.cv_cd_sphr_id cvCdSphrId,
+            A.cd_sphr_nm cdSphrNm,
+            A.cd_sphr_expl_txt cdSphrExplTxt,
+            A.hlv_cv_cd_sphr_id hlvCvCdSphrId,
+            b.cd_sphr_nm hlvCvCdSphrNm
+        FROM
+            cvcd_cd_sphr_m A LEFT JOIN cvcd_cd_sphr_m b
+                ON A.hlv_cv_cd_sphr_id = b.cv_cd_sphr_id
+                AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE
+            A.cv_cd_sphr_id = #{id}
+          AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+    <select id="getChildIdList" resultType="java.lang.String" parameterType="java.lang.String">
+        WITH RECURSIVE cvcd_cd_sphr_m_tree ( cv_cd_sphr_id ) AS (
+            SELECT
+                A.cv_cd_sphr_id
+            FROM
+                cvcd_cd_sphr_m A
+            WHERE
+                A.cv_cd_sphr_dsts_cd = '0010'
+              AND A.hlv_cv_cd_sphr_id = #{id}
+              AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            UNION ALL
+            SELECT
+                b.cv_cd_sphr_id
+            FROM
+                cvcd_cd_sphr_m b
+                    JOIN cvcd_cd_sphr_m_tree C ON b.hlv_cv_cd_sphr_id = C.cv_cd_sphr_id
+                    AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        )
+        SELECT
+            cv_cd_sphr_id
+        FROM
+            cvcd_cd_sphr_m_tree
+
+    </select>
+
+</mapper>

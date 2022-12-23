@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CdvlRMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CdvlR">
+        <result column="hlv_cv_cd_id" property="hlvCvCdId" />
+        <result column="hlv_cv_cdvl_id" property="hlvCvCdvlId" />
+        <result column="llv_cv_cd_id" property="llvCvCdId" />
+        <result column="llv_cv_cdvl_id" property="llvCvCdvlId" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="cv_cdvl_rlts_dsts_cd" property="cvCdvlRltsDstsCd" />
+        <result column="rlts_expl_txt" property="rltsExplTxt" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="sort_srno" property="sortSrno" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+
+    <select id="getCdvlR" resultType="com.codemanage.code.dto.response.CdvlRVo"
+            parameterType="com.codemanage.code.dto.request.CdvlRQueryDto">
+        SELECT
+            A.hlv_cv_cd_id,
+            A.hlv_cv_cdvl_id,
+            A.llv_cv_cd_id,
+            A.llv_cv_cdvl_id,
+            A.cv_cdvl_rlts_dsts_cd,
+            A.rlts_expl_txt,
+            A.sort_srno,
+            b.cd_vl hlv_cd_vl,
+            b.cdvl_nm hlv_cdvl_nm,
+            C.cd_vl llv_cd_vl,
+            C.cdvl_nm llv_cdvl_nm
+        FROM
+            cvcd_cdvl_r
+                A JOIN cvcd_cdvl_m b ON A.hlv_cv_cdvl_id = b.cv_cdvl_id
+                AND A.hlv_cv_cd_id = b.cv_cd_id
+                AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                  JOIN cvcd_cdvl_m C ON A.llv_cv_cdvl_id = C.cv_cdvl_id
+                AND A.llv_cv_cd_id = C.cv_cd_id
+                AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE
+            A.hlv_cv_cd_id = #{dto.hlvCvCdId}
+          AND A.llv_cv_cd_id = #{dto.llvCvCdId}
+          AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+</mapper>

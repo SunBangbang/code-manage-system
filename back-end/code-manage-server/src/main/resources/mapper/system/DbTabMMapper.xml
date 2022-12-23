@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.DbTabMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.DbTabM">
+        <id column="cv_db_tab_id" property="cvDbTabId" />
+        <result column="cv_dbms_id" property="cvDbmsId" />
+        <result column="cv_schm_id" property="cvSchmId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="db_tab_nm" property="dbTabNm" />
+        <result column="db_tab_expl_txt" property="dbTabExplTxt" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cv_sort_srno" property="cvSortSrno" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+
+    <select id="getTableByCondition" resultType="com.codemanage.system.dto.response.DbTabMVo"
+            parameterType="com.codemanage.system.dto.request.DbTabMQueryDto">
+
+        <include refid="selectVo"/>
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND fnl_yn = 'Y'
+          AND cv_schm_id = #{dto.cvSchmId}
+          AND cv_dbms_id = #{dto.cvDbmsId}
+        ORDER BY
+            cv_db_tab_id
+    </select>
+
+    <select id="getTableById" resultType="com.codemanage.system.dto.response.DbTabMVo"
+            parameterType="com.codemanage.system.dto.request.DbTabMQueryDto">
+       <include refid="selectVo"/>
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND fnl_yn = 'Y'
+          AND cv_db_tab_id = #{dto.cvDbTabId}
+          AND cv_schm_id = #{dto.cvSchmId}
+          AND cv_dbms_id = #{dto.cvDbmsId}
+    </select>
+
+
+    <select id="getDbmsTreeList" resultType="com.codemanage.system.dto.response.DbmsTreeDto"
+            parameterType="com.codemanage.system.dto.request.DbmsQueryDto">
+        SELECT
+            cv_db_tab_id AS id,
+            db_tab_nm AS name,
+            cv_schm_id AS parentId,
+            'tab' AS type,
+            cv_dbms_id AS cvDbmsId,
+            cv_schm_id AS cvSchmId,
+            cv_db_tab_id AS cvDbTabId,
+            '' AS cvDbFildId
+        FROM
+            cvso_db_tab_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_dbms_id = #{dto.cvDbmsId}
+          AND cv_schm_id = #{dto.cvSchmId}
+    </select>
+
+    <select id="checkTabNm" resultType="java.lang.Integer"
+            parameterType="com.codemanage.system.dto.request.DbTabMQueryDto">
+        SELECT
+            COUNT ( * )
+        FROM
+            cvso_db_tab_m
+        WHERE
+            cv_dbms_id = #{dto.cvDbmsId}
+          AND cv_schm_id = #{dto.cvSchmId}
+          AND db_tab_nm = #{dto.dbTabNm}
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000';
+    </select>
+
+    <select id="getSortSrno" resultType="java.lang.Integer">
+
+        SELECT
+            ( COALESCE ( MAX ( cv_sort_srno ), 0 ) + 1 ) num
+        FROM
+            cvso_db_tab_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_dbms_id = #{dbmsId}
+          AND cv_schm_id = #{schmId};
+    </select>
+
+    <select id="getTabId" resultType="java.lang.String">
+        SELECT CAST ( nextval( 'cvso_db_tab_m_seq' ) AS VARCHAR )
+    </select>
+
+    <select id="getTabEditById" resultType="com.codemanage.system.dto.response.DbTabMVo"
+            parameterType="com.codemanage.system.dto.request.DbTabMQueryDto">
+        SELECT
+            DISTINCT A.cv_db_tab_id,
+                     C.cv_dbms_id,
+                     b.cv_schm_id,
+                     C.dbms_nm,
+                     b.schm_nm,
+                     A.db_tab_nm,
+                     A.cv_sort_srno,
+                     A.db_tab_expl_txt
+        FROM
+            cvso_db_tab_m
+                A JOIN cvso_schm_m b ON A.cv_dbms_id = b.cv_dbms_id
+                AND A.cv_schm_id = b.cv_schm_id
+
+                AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                  JOIN cvso_dbms_m C ON b.cv_dbms_id = C.cv_dbms_id
+                AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE
+            A.cv_dbms_id = #{dto.cvDbmsId}
+          AND A.cv_schm_id = #{dto.cvSchmId}
+          AND A.cv_db_tab_id = #{dto.cvDbTabId}
+          AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000';
+    </select>
+
+    <sql id="selectVo">
+        SELECT
+            cv_dbms_id,
+            cv_schm_id,
+            cv_db_tab_id,
+            db_tab_nm,
+            db_tab_expl_txt,
+            rec_bgn_dttm,
+            rec_fnsh_dttm
+        FROM
+            cvso_db_tab_m
+    </sql>
+</mapper>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CdPptyFildBndRMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CdPptyFildBndR">
+        <id column="cv_cd_id" property="cvCdId" />
+        <result column="cv_cd_ppty_id" property="cvCdPptyId" />
+        <result column="cv_dbms_id" property="cvDbmsId" />
+        <result column="cv_schm_id" property="cvSchmId" />
+        <result column="cv_db_tab_id" property="cvDbTabId" />
+        <result column="cv_db_fild_id" property="cvDbFildId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="rlts_expl_txt" property="rltsExplTxt" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cv_sort_srno" property="cvSortSrno" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+    <select id="getCodeAttrColumnRelation" resultType="com.codemanage.code.dto.response.CodeAttrColumnRelationVo"
+            parameterType="com.codemanage.code.dto.request.CodeAttrColumnRQueryDto">
+        select r.*,
+               cdm.cd_lgc_nm,
+               (select db_tab_nm from CVSO_DB_TAB_M where cv_dbms_id = r.cv_dbms_id and cv_schm_id = r.cv_schm_id and cv_db_tab_id = r.cv_db_tab_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') as db_tab_nm,
+               (case r.cv_cd_ppty_id when '=100' then '=100' else (select cd_ppty_nm from cvcd_cd_ppty_m where cv_cd_id = r.cv_cd_id and cv_cd_ppty_id = r.cv_cd_ppty_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') end) as cd_ppty_nm,
+               (case r.cv_db_fild_id when '=100' then '=100' else (select db_fild_nm from CVSO_DB_FILD_M where cv_dbms_id = r.cv_dbms_id and cv_schm_id = r.cv_schm_id and cv_db_tab_id = r.cv_db_tab_id and cv_db_fild_id = r.cv_db_fild_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') end) as db_fild_nm
+        from
+            CVCD_CD_PPTY_FILD_BND_R r join cvcd_cd_m cdm on cdm.cv_cd_id = r.cv_cd_id and cdm.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        where
+            r.rec_fnsh_dttm = '9999-12-31 00:00:00.000000' and
+            r.cv_cd_id = #{dto.cvCdId} and
+            r.cv_dbms_id = #{dto.cvDbmsId} and
+            r.cv_schm_id = #{dto.cvSchmId} and
+            r.cv_db_tab_id = #{dto.cvDbTabId}
+    </select>
+
+    <select id="getPptyFildBndR" resultType="com.codemanage.code.dto.response.CdPptyFildBndRVo"
+            parameterType="com.codemanage.code.dto.request.CodeAttrColumnRQueryDto">
+        select r.*,
+               cdm.cd_lgc_nm,
+               (select db_tab_nm from CVSO_DB_TAB_M where cv_dbms_id = r.cv_dbms_id and cv_schm_id = r.cv_schm_id and cv_db_tab_id = r.cv_db_tab_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') as db_tab_nm,
+               (case r.cv_cd_ppty_id when '=100' then '=100' else (select cd_ppty_nm from cvcd_cd_ppty_m where cv_cd_id = r.cv_cd_id and cv_cd_ppty_id = r.cv_cd_ppty_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') end) as cd_ppty_nm,
+               (case r.cv_db_fild_id when '=100' then '=100' else (select db_fild_nm from CVSO_DB_FILD_M where cv_dbms_id = r.cv_dbms_id and cv_schm_id = r.cv_schm_id and cv_db_tab_id = r.cv_db_tab_id and cv_db_fild_id = r.cv_db_fild_id and rec_fnsh_dttm = '9999-12-31 00:00:00.000000') end) as db_fild_nm
+        from
+            CVCD_CD_PPTY_FILD_BND_R r join cvcd_cd_m cdm on cdm.cv_cd_id = r.cv_cd_id and cdm.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        where
+            r.rec_fnsh_dttm = '9999-12-31 00:00:00.000000' and
+            r.cv_cd_id = #{dto.cvCdId} and
+            r.cv_dbms_id = #{dto.cvDbmsId} and
+            r.cv_schm_id = #{dto.cvSchmId} and
+            r.cv_db_tab_id = #{dto.cvDbTabId}
+    </select>
+
+    <select id="getMappingLeftData" resultType="com.codemanage.code.entity.CdPptyM" parameterType="com.codemanage.code.dto.request.CdPptyMQueryDto">
+        select *
+        from 	cvcd_cd_ppty_m
+        where   cv_cd_id = #{dto.cvCdId}
+          and 	rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        order by cv_sort_srno,cv_cd_ppty_id, rec_bgn_dttm
+    </select>
+
+    <select id="getMappingRightData" resultType="com.codemanage.system.entity.DbFildM" parameterType="com.codemanage.system.dto.request.DbFildMQueryDto">
+        select 	*
+        from CVSO_DB_FILD_M
+        where 	REC_FNSH_DTTM = '9999-12-31 00:00:00.000000'
+          and		CV_DBMS_ID = #{dto.cvDbmsId}
+          and		CV_SCHM_ID = #{dto.cvSchmId}
+          and		CV_DB_TAB_ID = #{dto.cvDbTabId}
+        order by CV_SORT_SRNO
+    </select>
+
+
+</mapper>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CdRMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CdR">
+        <result column="hlv_cv_cd_id" property="hlvCvCdId" />
+        <result column="llv_cv_cd_id" property="llvCvCdId" />
+        <result column="cv_cd_rlts_cd" property="cvCdRltsCd" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+</mapper>

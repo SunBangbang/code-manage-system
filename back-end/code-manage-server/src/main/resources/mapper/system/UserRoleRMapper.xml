@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.UserRoleRMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.UserRoleR">
+        <result column="cv_user_id" property="cvUserId" />
+        <result column="cv_auth_obj_id" property="cvAuthObjId" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="cv_user_dsts_cd" property="cvUserDstsCd" />
+        <result column="cv_auth_obj_dsts_cd" property="cvAuthObjDstsCd" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+</mapper>

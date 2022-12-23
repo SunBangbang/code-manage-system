@@ -1,0 +1,76 @@
+/*普通单行表格---展示分页*/
+.margin-general-table {
+  height: calc(100% - 46px) !important;
+  margin-bottom: 10px;
+}
+/*普通单行表格---不展示分页*/
+.general-table {
+  height: calc(100% - 30px) !important;
+  //margin-bottom: 10px;
+}
+/*树形表格没有分页器*/
+.general-full-table {
+  height: 100% !important;
+}
+.table {
+  height: 100% !important;
+
+  .el-table__inner-wrapper {
+    height: 100%;
+
+    .el-table__header-wrapper {
+      .el-table__header {
+        tr {
+          th {
+            background: #262673;
+            color: #fff;
+          }
+        }
+      }
+    }
+
+    .el-table__body-wrapper {
+      height: calc(100% - 40px);
+    }
+  }
+}
+
+.el-tree--highlight-current .el-tree-node.is-current>.el-tree-node__content {
+  background-color: #262673 !important;
+  .el-tree-node__label {
+    color: #fff;
+  }
+}
+
+/*带搜素的双行表格*/
+.search-table {
+  height: calc(100% - 46px);
+  margin-bottom: 10px;
+  .el-table {
+    height: 100%;
+
+    .el-table__inner-wrapper {
+      height: 100%;
+
+      .el-table__header-wrapper {
+        .el-table__header {
+          tr:first-child {
+            th:not(:first-child) {
+              padding: 4px 0;
+              top: 40px;
+            }
+          }
+          tr:nth-child(2) {
+            th {
+              top: -41px;
+            }
+          }
+        }
+      }
+
+      .el-table__body-wrapper {
+        height: calc(100% - 81px);
+      }
+    }
+  }
+}

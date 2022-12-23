@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CdPptyMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CdPptyM">
+        <id column="cv_cd_ppty_id" property="cvCdPptyId" />
+        <result column="cv_cd_id" property="cvCdId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="cv_cd_sphr_id" property="cvCdSphrId" />
+        <result column="cd_ppty_nm" property="cdPptyNm" />
+        <result column="pk_yn" property="pkYn" />
+        <result column="null_yn" property="nullYn" />
+        <result column="data_tp_nm" property="dataTpNm" />
+        <result column="data_len" property="dataLen" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+        <result column="cret_cv_user_Nm" property="cretCvUserNm" />
+        <result column="cv_sort_srno" property="cvSortSrno" />
+        <result column="cv_ppty_dsts_cd" property="cvPptyDstsCd" />
+    </resultMap>
+
+    <!-- vo映射 -->
+<!--    <resultMap id="VoResultMap" type="com.codemanage.code.dto.response.CdPptyMVo" extends="BaseResultMap">-->
+<!--        <result column="cd_lgc_nm" property="cdLgcNm"/>-->
+<!--    </resultMap>-->
+
+    <select id="getCdPptyMList" resultType="com.codemanage.code.dto.response.CdPptyMVo"
+            parameterType="com.codemanage.code.dto.request.CdPptyMQueryDto">
+        SELECT
+            A.cv_cd_id,
+            A.cd_lgc_nm,
+            b.cv_cd_ppty_id,
+            b.cd_ppty_nm,
+            b.cv_cd_sphr_id,
+            b.pk_yn,
+            b.null_yn,
+            b.data_tp_nm,
+            b.data_len,
+            --b.rec_bgn_dttm,
+            to_char(b.rec_bgn_dttm, 'yyyy-MM-dd') rec_bgn_dttm,
+            b.cret_cv_user_id,
+            (SELECT user_nm FROM cvso_user_basi_m WHERE b.cret_cv_user_id = cv_user_id AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' ) AS cret_cv_user_nm,
+            b.cv_sort_srno,
+            b.cv_ppty_dsts_cd
+        FROM
+            cvcd_cd_m A JOIN cvcd_cd_ppty_m b ON A.cv_cd_id = b.cv_cd_id
+            AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE  1=1
+        <if test="null != dto">
+            <if test="null != dto.cvCdId and '' != dto.cvCdId">
+               AND A.cv_cd_id = #{dto.cvCdId}
+            </if>
+            <if test="null != dto.sortField and '' != dto.sortField">
+                order by b.${dto.sortField}
+            </if>
+            <if test="null == dto.sortField or '' == dto.sortField">
+                order by b.cv_sort_srno
+            </if>
+        </if>
+
+    </select>
+
+    <select id="getTableMap" resultType="java.util.LinkedHashMap" parameterType="java.lang.String">
+        ${sql}
+    </select>
+</mapper>

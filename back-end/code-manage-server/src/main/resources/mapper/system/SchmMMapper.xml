@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.SchmMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.SchmM">
+        <id column="cv_schm_id" property="cvSchmId" />
+        <result column="cv_dbms_id" property="cvDbmsId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="schm_nm" property="schmNm" />
+        <result column="schm_expl_txt" property="schmExplTxt" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cv_sort_srno" property="cvSortSrno" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+
+    <select id="getSchmByDbmsId" resultType="com.codemanage.system.dto.response.SchmMVo"
+            parameterType="java.lang.String">
+        SELECT
+            cv_dbms_id,
+            cv_schm_id,
+            schm_nm
+        FROM
+            cvso_schm_m A
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_dbms_id = #{dbmsId}
+        ORDER BY
+            cv_schm_id;
+
+    </select>
+
+    <select id="getSchmByCondition" resultType="com.codemanage.system.dto.response.SchmMVo"
+            parameterType="com.codemanage.system.dto.request.SchmMQueryDto">
+        <include refid="selectVo"/>
+        WHERE
+        rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        AND fnl_yn = 'Y'
+        AND cv_dbms_id = #{dto.cvDbmsId}
+        ORDER BY
+            schm_nm;
+    </select>
+
+    <select id="getSchmById" resultType="com.codemanage.system.dto.response.SchmMVo"
+            parameterType="com.codemanage.system.dto.request.SchmMQueryDto">
+        <include refid="selectVo"/>
+        WHERE
+        rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        AND fnl_yn = 'Y'
+        AND cv_dbms_id = #{dto.cvDbmsId}
+        AND cv_schm_id = #{dto.cvSchmId}
+    </select>
+
+    <select id="checkSchmNm" resultType="java.lang.Integer"
+            parameterType="com.codemanage.system.dto.request.SchmMQueryDto">
+        SELECT COUNT ( * )
+        FROM
+            cvso_schm_m
+        WHERE
+            schm_nm = #{dto.schmNm}
+          AND cv_dbms_id = #{dto.cvDbmsId}
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000';
+    </select>
+
+
+    <select id="getDbmsTreeList" resultType="com.codemanage.system.dto.response.DbmsTreeDto"
+            parameterType="com.codemanage.system.dto.request.DbmsQueryDto">
+        SELECT
+            cv_schm_id AS id,
+            schm_nm AS name,
+            cv_dbms_id AS parentId,
+            'schm' AS type,
+            cv_dbms_id AS cvDbmsId,
+            cv_schm_id AS cvSchmId,
+            '' AS cvDbTabId,
+            '' AS cvDbFildId
+        FROM
+            cvso_schm_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_dbms_id = #{dto.cvDbmsId}
+    </select>
+    <select id="getSortSrno" resultType="java.lang.Integer" parameterType="java.lang.String">
+
+        SELECT
+            ( COALESCE ( MAX ( cv_sort_srno ), 0 ) + 1 ) num
+        FROM
+            cvso_schm_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_dbms_id = #{dbmsId};
+    </select>
+
+    <select id="getSchmId" resultType="java.lang.String">
+        SELECT CAST ( nextval( 'cvso_schm_m_seq' ) AS VARCHAR )
+    </select>
+
+
+    <select id="getSchmEditById" resultType="com.codemanage.system.dto.response.SchmMVo"
+            parameterType="com.codemanage.system.dto.request.SchmMQueryDto">
+        SELECT
+            DISTINCT A.cv_schm_id,
+                     A.cv_dbms_id,
+                     b.dbms_nm,
+                     A.schm_nm,
+                     A.cv_sort_srno,
+                     A.schm_expl_txt
+        FROM
+            cvso_schm_m A LEFT JOIN cvso_dbms_m b ON A.cv_dbms_id = b.cv_dbms_id
+        WHERE
+            A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND A.cv_dbms_id = #{dto.cvDbmsId}
+          AND A.cv_schm_id = #{dto.cvSchmId}
+    </select>
+
+    <sql id="selectVo">
+        SELECT
+            cv_dbms_id,
+            cv_schm_id,
+            schm_nm,
+            schm_expl_txt,
+            rec_bgn_dttm,
+            rec_fnsh_dttm
+        FROM
+            cvso_schm_m
+    </sql>
+
+</mapper>

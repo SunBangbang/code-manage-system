@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.accesshistory.mapper.BnacLgnHMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.accesshistory.entity.BnacLgnH">
+        <result column="cv_user_id" property="cvUserId" />
+        <result column="lgn_dttm" property="lgnDttm" />
+        <result column="cv_lgn_rslt_dsts_cd" property="cvLgnRsltDstsCd" />
+        <result column="rem_host_ip" property="remHostIp" />
+        <result column="rem_host_nm" property="remHostNm" />
+        <result column="cv_lgn_bnac_id" property="cvLgnBnacId" />
+    </resultMap>
+
+    <select id="getList" resultType="com.codemanage.accesshistory.dto.response.BnacLgnHVo">
+        select g.*, cubm.user_nm, cubm.cv_lgn_id
+        from cvso_bnac_lgn_h g
+        inner join cvso_user_basi_m cubm on g.cv_user_id = cubm.cv_user_id
+        where 1=1
+        <if test="null != dto">
+            <if test="null != dto.cvLgnId and '' != dto.cvLgnId">
+                AND cubm.cv_lgn_id = #{dto.cvLgnId}
+            </if>
+            <if test="null != dto.userNm and '' != dto.userNm">
+                AND cubm.user_nm like concat('%',#{dto.userNm},'%')
+            </if>
+            <if test="null != dto.beginTime and null != dto.endTime">
+                AND g.lgn_dttm between #{dto.beginTime} and #{dto.endTime}
+            </if>
+        </if>
+        order by g.lgn_dttm desc
+    </select>
+
+</mapper>

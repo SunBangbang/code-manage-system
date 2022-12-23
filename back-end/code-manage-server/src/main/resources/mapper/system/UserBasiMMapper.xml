@@ -1,0 +1,479 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.UserBasiMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.UserBasiM">
+        <id column="cv_user_id" property="cvUserId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="user_nm" property="userNm" />
+        <result column="lgn_pwd_encd" property="lgnPwdEncd" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="user_expl_txt" property="userExplTxt" />
+        <result column="cv_user_dsts_cd" property="cvUserDstsCd" />
+        <result column="hlv_cv_user_id" property="hlvCvUserId" />
+        <result column="cv_lang_cd" property="cvLangCd" />
+        <result column="bnac_expr_dt" property="bnacExprDt" />
+        <result column="cv_bnac_lck_st_cd" property="cvBnacLckStCd" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+        <result column="cv_lgn_id" property="cvLgnId" />
+        <result column="mbph_no" property="mbphNo" />
+        <result column="tlph_no" property="tlphNo" />
+        <result column="cmpy_tlph_no" property="cmpyTlphNo" />
+        <result column="mlbx_url" property="mlbxUrl" />
+        <result column="cv_own_cmpy_id" property="cvOwnCmpyId" />
+        <result column="cmpy_gm_nm" property="cmpyGmNm" />
+    </resultMap>
+
+    <select id="getDeptAndUserTree" resultType="com.codemanage.system.dto.response.DeptTreeDto">
+        WITH RECURSIVE cvso_user_basi_m_tree ( cv_user_id, user_nm, hlv_cv_user_id, cv_user_dsts_cd ) AS (
+            SELECT
+                cv_user_id,
+                user_nm,
+                hlv_cv_user_id,
+                cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m
+            WHERE
+                hlv_cv_user_id = '0'
+              AND cv_user_dsts_cd = '0200'
+              AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            UNION ALL
+            SELECT
+                C.cv_user_id,
+                C.user_nm,
+                b.hlv_cv_user_id,
+                C.cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m_tree
+                    A JOIN cvso_role_r b ON A.cv_user_id = b.hlv_cv_user_id
+                    AND b.llv_cv_user_dsts_cd IN ( '0100', '0200' )
+                    AND '9999-12-31 00:00:00.000000' = b.rec_fnsh_dttm
+                      JOIN cvso_user_basi_m C ON b.llv_cv_user_id = C.cv_user_id
+                    AND '9999-12-31 00:00:00.000000' = C.rec_fnsh_dttm
+        )
+
+        SELECT
+            cv_user_id AS id,
+            user_nm AS name,
+            hlv_cv_user_id AS parentId,
+            cv_user_dsts_cd AS code
+        FROM
+            cvso_user_basi_m_tree;
+    </select>
+
+    <select id="getDeptTree" resultType="com.codemanage.system.dto.response.DeptTreeDto">
+        WITH RECURSIVE cvso_user_basi_m_tree ( cv_user_id, user_nm, hlv_cv_user_id, cv_user_dsts_cd ) AS (
+            SELECT
+                cv_user_id,
+                user_nm,
+                hlv_cv_user_id,
+                cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m
+            WHERE
+                hlv_cv_user_id = '0'
+              AND cv_user_dsts_cd = '0200'
+              AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            UNION ALL
+            SELECT
+                C.cv_user_id,
+                C.user_nm,
+                b.hlv_cv_user_id,
+                C.cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m_tree
+                    A JOIN cvso_role_r b ON A.cv_user_id = b.hlv_cv_user_id
+                    AND b.llv_cv_user_dsts_cd = '0200'
+                    AND '9999-12-31 00:00:00.000000' = b.rec_fnsh_dttm
+                      JOIN cvso_user_basi_m C ON b.llv_cv_user_id = C.cv_user_id
+                    AND '9999-12-31 00:00:00.000000' = C.rec_fnsh_dttm
+        )
+
+        SELECT
+            cv_user_id AS id,
+            user_nm AS name,
+            hlv_cv_user_id AS parentId,
+            cv_user_dsts_cd AS code
+        FROM
+            cvso_user_basi_m_tree;
+    </select>
+
+    <select id="getUserListByDept" resultType="com.codemanage.system.dto.response.UserBasiMVo"
+            parameterType="java.util.Map">
+        SELECT A.cv_user_id,
+               A.user_nm,
+               A.cv_lgn_id,
+               b.user_nm AS dept,
+               A.mlbx_url,
+               A.fnl_yn,
+               A.cmpy_tlph_no,
+               A.hlv_cv_user_id deptId
+        FROM
+            cvso_user_basi_m
+                A JOIN cvso_user_basi_m b ON A.hlv_cv_user_id = b.cv_user_id
+                AND A.cv_user_dsts_cd = '0100'
+                AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        where 1=1
+        <if test="null != dto">
+            <if test="null != dto.deptId and '' != dto.deptId">
+                AND A.hlv_cv_user_id = #{dto.deptId}
+            </if>
+            <if test="null != dto.userNm and '' != dto.userNm">
+                AND A.user_nm like concat('%',#{dto.userNm},'%')
+            </if>
+            <if test="null != dto.cvLgnId and '' != dto.cvLgnId">
+                AND A.cv_lgn_id like concat('%',#{dto.cvLgnId},'%')
+            </if>
+        </if>
+    </select>
+
+    <select id="getDeptTreeListById" resultType="com.codemanage.system.dto.response.DeptTreeDto"
+            parameterType="java.lang.String">
+        WITH RECURSIVE cvso_user_basi_m_tree ( cv_user_id, user_nm, hlv_cv_user_id, cv_user_dsts_cd ) AS (
+            SELECT
+                cv_user_id,
+                user_nm,
+                hlv_cv_user_id,
+                cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m
+            WHERE
+                cv_user_id = #{id}
+              AND cv_user_dsts_cd = '0200'
+              AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            UNION ALL
+            SELECT
+                C.cv_user_id,
+                C.user_nm,
+                b.hlv_cv_user_id,
+                C.cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m_tree
+                    A JOIN cvso_role_r b ON A.cv_user_id = b.hlv_cv_user_id
+                    AND b.llv_cv_user_dsts_cd IN ( '0100', '0200' )
+                    AND '9999-12-31 00:00:00.000000' = b.rec_fnsh_dttm
+                      JOIN cvso_user_basi_m C ON b.llv_cv_user_id = C.cv_user_id
+                    AND '9999-12-31 00:00:00.000000' = C.rec_fnsh_dttm
+        )
+
+        SELECT
+            cv_user_id AS ID,
+            user_nm AS NAME,
+            hlv_cv_user_id AS parentId,
+            cv_user_dsts_cd AS code
+        FROM
+            cvso_user_basi_m_tree
+    </select>
+
+    <insert id="insertByDeptDelete">
+        insert into
+            cvso_user_basi_m (
+                  cv_user_id
+                 ,rec_fnsh_dttm
+                 ,rec_bgn_dttm
+                 ,user_nm
+                 ,user_expl_txt
+                 ,cv_user_dsts_cd
+                 ,hlv_cv_user_id
+                 ,cv_lang_cd
+                 ,fnl_yn
+                 ,cret_cv_user_id
+                 ,cv_own_cmpy_id
+                 ,cmpy_gm_nm
+            )
+        select
+            cv_user_id
+             ,(
+            case cv_user_dsts_cd
+                when '0100'
+                    then '9999-12-31T00:00:00.000000'
+                when '0200'
+                    then '${newBgnDttm}'
+                end
+            ) as rec_fnsh_dttm
+             ,'${newBgnDttm}' as rec_bgn_dttm
+             ,user_nm
+             ,user_expl_txt
+             ,cv_user_dsts_cd
+             ,(case cv_user_dsts_cd
+                    when '0100'
+                        then '0'
+                    when '0200'
+                        then hlv_cv_user_id
+                    end
+             ) as hlv_cv_user_id
+             ,cv_lang_cd
+             ,(
+            case cv_user_dsts_cd
+                when '0100'
+                    then 'Y'
+                when '0200'
+                    then 'N'
+                end
+            ) as fnl_yn
+             ,'${createUserId}' as cret_cv_user_id
+             ,cv_own_cmpy_id
+             ,cmpy_gm_nm
+        from
+            cvso_user_basi_m
+        where
+            cv_user_id in
+                <foreach collection="idList" item="id" separator="," open="(" close=")">
+                    #{id}
+                </foreach>
+            and  rec_fnsh_dttm = #{oldFnshDttm}
+            and  cv_user_dsts_cd in ('0100','0200')
+    </insert>
+
+    <!-- 查询用户列表 -->
+    <select id="getUserBasiMList" resultType="com.codemanage.system.dto.response.UserBasiMVo"
+            parameterType="com.codemanage.system.dto.request.UserBasiMDto">
+        SELECT
+            A.cv_user_id,
+            A.cv_lgn_id,
+            A.user_nm,
+            A.mlbx_url,
+            b.user_nm AS dept,
+            A.bnac_expr_dt,
+            A.fnl_yn,
+            A.cv_bnac_lck_st_cd,
+            string_agg ( d.user_nm, ',' ORDER BY d.user_nm ) AS userrole
+        FROM
+            cvso_user_basi_m A
+            LEFT JOIN cvso_user_basi_m b ON A.hlv_cv_user_id = b.cv_user_id
+            AND b.cv_user_dsts_cd = '0200'
+            AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            LEFT JOIN cvso_role_r C ON C.llv_cv_user_id = A.cv_user_id
+            AND C.hlv_cv_user_dsts_cd = '0300'
+            AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            LEFT JOIN cvso_user_basi_m d ON C.hlv_cv_user_id = d.cv_user_id
+            WHERE A.cv_user_dsts_cd = '0100'
+            AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        <if test="null != dto">
+                <if test="null != dto.cvLgnId and '' != dto.cvLgnId">
+                    AND A.cv_lgn_id = #{dto.cvLgnId}
+                </if>
+                <if test="null != dto.userNm and '' != dto.userNm">
+                    AND A.user_nm like concat('%',#{dto.userNm},'%')
+                </if>
+                <if test="null != dto.dept and '' != dto.dept">
+                    AND b.user_nm like concat('%',#{dto.dept},'%')
+                </if>
+                <if test="null != dto.roleList and dto.roleList.size() > 0 ">
+                    AND d.user_nm in
+                    <foreach collection="dto.roleList" item="role" open="(" separator="," close=")">
+                        #{role}
+                    </foreach>
+                </if>
+                <if test="null != dto.fnlYn and '' != dto.fnlYn">
+                    AND A.fnl_yn = #{dto.fnlYn}
+                </if>
+                <if test="null != dto.isExpired and '' != dto.isExpired">
+                    <if test="'unExpired'.equals(dto.isExpired)">
+                        AND  coalesce(a.bnac_expr_dt) <![CDATA[>]]> to_char(now(),'yyyymmdd')
+                    </if>
+                    <if test="'expired'.equals(dto.isExpired)">
+                        AND  coalesce(a.bnac_expr_dt) <![CDATA[<=]]> to_char(now(),'yyyymmdd')
+                    </if>
+                </if>
+            </if>
+        GROUP BY
+            A.cv_user_id,
+            A.cv_lgn_id,
+            A.user_nm,
+            A.mlbx_url,
+            b.user_nm,
+            A.bnac_expr_dt,
+            A.fnl_yn,
+            A.cv_bnac_lck_st_cd;
+    </select>
+
+    <select id="getVoById" resultType="com.codemanage.system.dto.response.UserBasiMVo"
+            parameterType="java.lang.String">
+        SELECT
+            A.cv_user_id,
+            A.cv_lgn_id,
+            A.user_nm,
+            A.mlbx_url,
+            A.bnac_expr_dt,
+            A.fnl_yn,
+            A.hlv_cv_user_id,
+            A.cv_bnac_lck_st_cd,
+            A.lgn_pwd_encd
+        FROM
+            cvso_user_basi_m A
+        WHERE
+            A.cv_user_id = #{id}
+          AND A.cv_user_dsts_cd = '0100'
+          AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+
+    <!-- 检查登录id是否唯一 -->
+    <select id="checkLgnId" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT( cv_lgn_id ) AS cnt
+        FROM
+            cvso_user_basi_m
+        WHERE
+            cv_user_dsts_cd = '0100'
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_lgn_id = #{lgnId};
+    </select>
+
+    <!-- 检查用户id是否唯一 -->
+    <select id="checkUserId" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT( cv_user_id ) AS cnt
+        FROM
+            cvso_user_basi_m
+        WHERE
+            cv_user_dsts_cd = '0100'
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_user_id = #{userId};
+    </select>
+
+    <select id="getSubordinateUserByDeptId" resultType="com.codemanage.system.dto.response.UserBasiMVo"
+            parameterType="java.lang.String">
+        WITH RECURSIVE cvso_user_basi_m_tree ( cv_user_id, user_nm, hlv_cv_user_id, cv_user_dsts_cd ) AS (
+            SELECT
+                cv_user_id,
+                user_nm,
+                hlv_cv_user_id,
+                cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m
+            WHERE
+                hlv_cv_user_id = #{deptId}
+              AND cv_user_dsts_cd = '0200'
+              AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' UNION ALL
+            SELECT
+                C.cv_user_id,
+                C.user_nm,
+                b.hlv_cv_user_id,
+                C.cv_user_dsts_cd
+            FROM
+                cvso_user_basi_m_tree
+                    A JOIN cvso_role_r b ON A.cv_user_id = b.hlv_cv_user_id
+                    AND b.llv_cv_user_dsts_cd IN ( '0100', '0200' )
+                    AND '9999-12-31 00:00:00.000000' = b.rec_fnsh_dttm
+                      JOIN cvso_user_basi_m C ON b.llv_cv_user_id = C.cv_user_id
+                    AND '9999-12-31 00:00:00.000000' = C.rec_fnsh_dttm
+        )
+
+        SELECT
+            cv_user_id,
+            user_nm,
+            hlv_cv_user_id,
+            cv_user_dsts_cd
+        FROM
+            cvso_user_basi_m_tree
+        WHERE
+            cv_user_dsts_cd = '0100';
+    </select>
+    <select id="getAllRole" resultType="com.codemanage.system.dto.response.RoleVo">
+        SELECT
+            cv_user_id,
+            user_nm,
+            user_expl_txt
+        FROM
+            cvso_user_basi_m
+        WHERE
+            cv_user_dsts_cd = '0300'
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+    <select id="checkRoleName" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT( user_nm ) AS cnt
+        FROM
+            cvso_user_basi_m
+        WHERE
+            cv_user_dsts_cd = '0300'
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND user_nm = #{roleName}
+    </select>
+
+
+    <insert id="insertByRoleDelete">
+        INSERT INTO
+            cvso_user_basi_m (
+            cv_user_id,
+            rec_fnsh_dttm,
+            rec_bgn_dttm,
+            user_nm,
+            user_expl_txt,
+            cv_user_dsts_cd,
+            hlv_cv_user_id,
+            cv_lang_cd,
+            fnl_yn,
+            cret_cv_user_id,
+            cv_own_cmpy_id )
+        SELECT
+            ( cv_user_id,
+              ${newBgnDttm},
+              ${newBgnDttm},
+              user_nm,
+              user_expl_txt,
+              cv_user_dsts_cd,
+              hlv_cv_user_id,
+              cv_lang_cd,
+              'N',
+              ${createUserId},
+              cv_own_cmpy_id )
+        FROM
+            cvso_user_basi_m
+        WHERE
+            cv_user_id = #{id}
+          AND rec_fnsh_dttm = #{oldFnshDttm}
+    </insert>
+
+    <select id="getUserPageByRole" resultType="com.codemanage.system.dto.response.UserBasiMVo">
+        SELECT
+            A.cv_user_id,
+            A.user_nm,
+            A.cv_lgn_id,
+            b.user_nm AS dept
+        FROM
+            cvso_user_basi_m A JOIN cvso_user_basi_m b
+                                    ON A.hlv_cv_user_id = b.cv_user_id
+                                        AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE
+              A.cv_user_id IN ( SELECT llv_cv_user_id FROM cvso_role_r WHERE hlv_cv_user_id = #{dto.roleId} AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' )
+          AND A.cv_user_dsts_cd = '0100'
+          AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+    <select id="getRoleByUserId" resultType="com.codemanage.system.dto.response.RoleVo"
+            parameterType="java.lang.String">
+        SELECT
+            cv_user_id,
+            user_nm,
+            user_expl_txt
+        FROM
+            cvso_user_basi_m
+        WHERE
+            cv_user_dsts_cd = '0300'
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_user_id IN ( SELECT hlv_cv_user_id FROM cvso_role_r WHERE llv_cv_user_id = #{userId}
+                                                                       AND hlv_cv_user_dsts_cd = '0300'
+                                                                       AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000' )
+
+    </select>
+    <select id="getRoleById" resultType="com.codemanage.system.dto.response.RoleVo"
+            parameterType="java.lang.String">
+        SELECT
+            cv_user_id,
+            user_nm,
+            user_expl_txt
+        FROM
+            cvso_user_basi_m
+        WHERE
+            cv_user_id = #{id}
+          AND cv_user_dsts_cd = '0300'
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+
+    </select>
+
+
+</mapper>

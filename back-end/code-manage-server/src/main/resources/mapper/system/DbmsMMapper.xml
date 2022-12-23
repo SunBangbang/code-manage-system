@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.DbmsMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.DbmsM">
+        <id column="cv_dbms_id" property="cvDbmsId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="dbms_nm" property="dbmsNm" />
+        <result column="dbms_expl_txt" property="dbmsExplTxt" />
+        <result column="dbms_ip" property="dbmsIp" />
+        <result column="dbms_port_vl" property="dbmsPortVl" />
+        <result column="cv_dbms_bnac_id" property="cvDbmsBnacId" />
+        <result column="user_pwd_encd" property="userPwdEncd" />
+        <result column="dflt_cnct_cv_schm_id" property="dfltCnctCvSchmId" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cv_sort_srno" property="cvSortSrno" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+    <select id="getAllDbms" resultType="com.codemanage.system.dto.response.DbmsMVo">
+        SELECT
+            cv_dbms_id,
+            dbms_nm
+        FROM
+            cvso_dbms_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        ORDER BY
+            dbms_nm;
+    </select>
+
+
+    <select id="getDbmsList" resultType="com.codemanage.system.dto.response.DbmsMVo">
+        <include refid="selectVo"/>
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND fnl_yn = 'Y'
+        ORDER BY
+            cv_dbms_id;
+    </select>
+
+    <select id="getDbmsById" resultType="com.codemanage.system.dto.response.DbmsMVo">
+       <include refid="selectVo"/>
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND cv_dbms_id = #{dbmsId}
+          AND to_char(rec_bgn_dttm,'yyyy-MM-dd hh24:mi:ss') = #{recBgnDttm}
+          AND fnl_yn = 'Y';
+    </select>
+
+    <select id="getDbmsTree" resultType="com.codemanage.system.dto.response.DbmsTreeDto">
+        SELECT
+            cv_dbms_id AS id,
+            dbms_nm AS name,
+            '0' AS parentId,
+            'db' AS type,
+            cv_dbms_id AS cvDbmsId,
+            '' AS cvSchmId,
+            '' AS cvDbTabId,
+            '' AS cvDbFildId
+        FROM
+            cvso_dbms_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        UNION ALL
+        SELECT
+            cv_schm_id AS id,
+            schm_nm AS name,
+            cv_dbms_id AS parentId,
+            'schm' AS type,
+            cv_dbms_id AS cvDbmsId,
+            cv_schm_id AS cvSchmId,
+            '' AS cvDbTabId,
+            '' AS cvDbFildId
+        FROM
+            cvso_schm_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        UNION ALL
+        SELECT
+            cv_db_tab_id AS id,
+            db_tab_nm AS name,
+            cv_schm_id AS parentId,
+            'tab' AS type,
+            cv_dbms_id AS cvDbmsId,
+            cv_schm_id AS cvSchmId,
+            cv_db_tab_id AS cvDbTabId,
+            '' AS cvDbFildId
+        FROM
+            cvso_db_tab_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        UNION ALL
+        SELECT
+            cv_db_fild_id AS id,
+            db_fild_nm AS name,
+            cv_db_tab_id AS parentId,
+            'fild' AS type,
+            cv_dbms_id AS cvDbmsId,
+            cv_schm_id AS cvSchmId,
+            cv_db_tab_id AS cvDbTabId,
+            cv_db_fild_id AS cvDbFildId
+        FROM
+            cvso_db_fild_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+    <select id="checkDdmsNm" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT ( * )
+        FROM
+            cvso_dbms_m
+        WHERE
+            dbms_nm = #{dbmsNm}
+          AND rec_fnsh_dttm = '9999-12-31 00:00:00.000000';
+    </select>
+    <select id="getDbmsTreeList" resultType="com.codemanage.system.dto.response.DbmsTreeDto">
+        SELECT
+            cv_dbms_id AS id,
+            dbms_nm AS name,
+            '0' AS parentId,
+            'db' AS type,
+            rec_bgn_dttm AS recBgnDttm,
+            cv_dbms_id AS cvDbmsId,
+            '' AS cvSchmId,
+            '' AS cvDbTabId,
+            '' AS cvDbFildId
+        FROM
+            cvso_dbms_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+    <select id="getSortSrno" resultType="java.lang.Integer">
+        SELECT
+            ( COALESCE ( MAX ( cv_sort_srno ), 0 ) + 1 ) num
+        FROM
+            cvso_dbms_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000';
+    </select>
+
+    <select id="getDbmsId" resultType="java.lang.String">
+        SELECT CAST( nextval( 'cvso_dbms_m_seq' ) AS VARCHAR )
+    </select>
+
+    <select id="getObjById" resultType="com.codemanage.system.entity.DbmsM">
+        SELECT
+            *
+        FROM
+            cvso_dbms_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            AND cv_dbms_id = #{dbmsId}
+            AND to_char(rec_bgn_dttm,'yyyy-MM-dd hh24:mi:ss') = #{recBgnDttm}
+    </select>
+
+    <sql id="selectVo">
+        SELECT
+            cv_dbms_id,
+            dbms_nm,
+            dbms_ip,
+            dbms_port_vl,
+            cv_dbms_bnac_id,
+            '' user_pwd_encd,
+            user_pwd_encd user_pwd_encd_bytes,
+            dflt_cnct_cv_schm_id,
+            rec_bgn_dttm,
+            rec_fnsh_dttm,
+            dbms_expl_txt,
+            cv_sort_srno
+        FROM
+            cvso_dbms_m
+    </sql>
+
+</mapper>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.system.mapper.SysMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.system.entity.SysM">
+        <id column="cv_sys_id" property="cvSysId" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="sys_nm" property="sysNm" />
+        <result column="sys_expl_txt" property="sysExplTxt" />
+        <result column="fnl_yn" property="fnlYn" />
+        <result column="cv_sort_srno" property="cvSortSrno" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+    </resultMap>
+
+    <select id="getSysList" resultType="com.codemanage.system.dto.response.SysMVo"
+            parameterType="com.codemanage.system.dto.request.SysMQueryDto">
+
+        SELECT
+            b.cv_sys_id,
+            b.cv_dbms_id,
+            b.cv_schm_id,
+            A.sys_nm,
+            A.sys_expl_txt,
+            b.rec_bgn_dttm,
+            b.rec_fnsh_dttm,
+            b.fnl_yn,
+            b.rlts_expl_txt,
+            C.schm_nm,
+            b.cret_cv_user_id
+        FROM
+            cvso_sys_m A
+                JOIN cvso_sys_schm_r b ON A.cv_sys_id = b.cv_sys_id
+                AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                JOIN cvso_schm_m C ON b.cv_dbms_id = C.cv_dbms_id
+                AND b.cv_schm_id = C.cv_schm_id
+                AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE
+            A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        <if test="null != dto">
+            <if test="null != dto.fnlYn and '' != dto.fnlYn">
+                AND b.fnl_yn = #{dto.fnlYn}
+            </if>
+            <if test="null != dto.sysNm and '' != dto.sysNm">
+                AND A.sys_nm like concat('%',#{dto.sysNm},'%')
+            </if>
+        </if>
+        ORDER BY
+            A.cv_sys_id;
+    </select>
+
+    <select id="checkSysNm" resultType="java.lang.Integer" parameterType="java.lang.String">
+        SELECT COUNT ( * ) AS cnt
+        FROM
+            cvso_sys_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND sys_nm = #{sysNm};
+    </select>
+
+    <select id="getSysId" resultType="java.lang.String">
+        SELECT CAST ( nextval( 'cvso_sys_m_seq' ) AS VARCHAR )
+    </select>
+
+    <select id="getSortSrno" resultType="java.lang.Integer">
+        SELECT
+            ( COALESCE ( MAX ( cv_sort_srno ), 0 ) + 1 ) num
+        FROM
+            cvso_sys_m
+        WHERE
+            rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+    </select>
+
+    <select id="getSysMVoById" resultType="com.codemanage.system.dto.response.SysMVo"
+            parameterType="com.codemanage.system.dto.request.SysMQueryDto">
+        SELECT
+            DISTINCT b.cv_sys_id,
+             b.cv_dbms_id,
+             b.cv_schm_id,
+             A.sys_nm,
+             A.cv_sort_srno,
+             A.sys_expl_txt,
+             d.dbms_nm,
+             C.schm_nm
+        FROM
+            cvso_sys_m
+                A JOIN cvso_sys_schm_r b ON A.cv_sys_id = b.cv_sys_id
+                AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                  JOIN cvso_schm_m C ON b.cv_dbms_id = C.cv_dbms_id
+                AND b.cv_schm_id = C.cv_schm_id
+                AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                  JOIN cvso_dbms_m d ON C.cv_dbms_id = d.cv_dbms_id
+                AND d.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE
+            b.cv_sys_id = #{dto.cvSysId}
+          AND b.cv_dbms_id = #{dto.cvDbmsId}
+          AND b.cv_schm_id = #{dto.cvSchmId}
+          AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000';
+    </select>
+
+</mapper>

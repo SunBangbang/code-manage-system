@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.accesshistory.mapper.UserOnliHMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.accesshistory.entity.UserOnliH">
+        <id column="cv_user_id" property="cvUserId" />
+        <result column="onli_yn" property="onliYn" />
+        <result column="last_lgn_dttm" property="lastLgnDttm" />
+        <result column="fnl_lout_dttm" property="fnlLoutDttm" />
+    </resultMap>
+
+    <select id="getList" resultType="com.codemanage.accesshistory.dto.response.UserOnliHVo">
+        select h.*, m.user_nm, m.cv_lgn_id
+        from cvso_user_onli_h h INNER JOIN cvso_user_basi_m m on m.cv_user_id = h.cv_user_id
+        where 1=1
+        <if test="null != dto">
+            <if test="null != dto.cvLgnId and '' != dto.cvLgnId">
+                AND m.cv_lgn_id = #{dto.cvLgnId}
+            </if>
+            <if test="null != dto.userNm and '' != dto.userNm">
+                AND m.user_nm like concat('%',#{dto.userNm},'%')
+            </if>
+            <if test="null != dto.beginTime and null != dto.endTime">
+                AND h.last_lgn_dttm between #{dto.beginTime} and #{dto.endTime}
+            </if>
+        </if>
+        order by h.last_lgn_dttm desc
+    </select>
+
+</mapper>

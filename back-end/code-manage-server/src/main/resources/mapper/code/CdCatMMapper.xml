@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.codemanage.code.mapper.CdCatMMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.codemanage.code.entity.CdCatM">
+        <id column="cv_cd_cat_id" property="cvCdCatId" />
+        <result column="rec_bgn_dttm" property="recBgnDttm" />
+        <result column="rec_fnsh_dttm" property="recFnshDttm" />
+        <result column="cd_cat_nm" property="cdCatNm" />
+        <result column="hlv_cv_cd_cat_id" property="hlvCvCdCatId" />
+        <result column="cd_cat_expl_txt" property="cdCatExplTxt" />
+        <result column="cv_cd_sphr_id" property="cvCdSphrId" />
+        <result column="cret_cv_user_id" property="cretCvUserId" />
+        <result column="fnl_yn" property="fnlYn" />
+    </resultMap>
+
+    <!-- 查询编码分类列表 -->
+    <select id="getCatMList" resultType="com.codemanage.code.dto.response.CdCatMVo"
+            parameterType="com.codemanage.code.dto.request.CdCatMQueryDto">
+
+        WITH RECURSIVE cvcd_cd_cat_m_tree ( cv_cd_cat_id, cv_cd_sphr_id, cd_cat_nm, cd_cat_expl_txt, hlv_cv_cd_cat_id ) AS (
+            SELECT
+                A.cv_cd_cat_id,
+                A.cv_cd_sphr_id,
+                A.cd_cat_nm,
+                A.cd_cat_expl_txt,
+                A.hlv_cv_cd_cat_id
+            FROM
+                cvcd_cd_cat_m A
+            WHERE
+                A.hlv_cv_cd_cat_id = '0'
+              AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000' UNION ALL
+            SELECT
+                b.cv_cd_cat_id,
+                b.cv_cd_sphr_id,
+                b.cd_cat_nm,
+                b.cd_cat_expl_txt,
+                b.hlv_cv_cd_cat_id
+            FROM
+                cvcd_cd_cat_m b
+                    JOIN cvcd_cd_cat_m_tree C ON b.hlv_cv_cd_cat_id = C.cv_cd_cat_id
+                    AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        )
+        SELECT
+            cv_cd_cat_id,
+            cv_cd_sphr_id,
+            cd_cat_nm,
+            cd_cat_expl_txt,
+            hlv_cv_cd_cat_id
+        FROM
+            cvcd_cd_cat_m_tree
+        <if test="null != dto">
+        where 1=1
+            <if test="null != dto.cdCatNm and '' != dto.cdCatNm">
+                AND cd_cat_nm like concat('%',#{dto.cdCatNm},'%')
+            </if>
+        </if>
+    </select>
+
+    <select id="getVoById" resultType="com.codemanage.code.dto.response.CdCatMVo"
+            parameterType="java.lang.String">
+        SELECT
+            A.cv_cd_cat_id cvCdCatId,
+            A.cd_cat_nm cdCatNm,
+            A.cd_cat_expl_txt cdCatExplTxt,
+            A.hlv_cv_cd_cat_id hlvCvCdCatId,
+            C.cd_cat_nm hlvCvCdCatNm,
+            A.cv_cd_sphr_id cvCdSphrId,
+            b.cd_sphr_nm cdSphrNm
+        FROM
+            cvcd_cd_cat_m A
+                LEFT JOIN cvcd_cd_sphr_m b
+                          ON A.cv_cd_sphr_id = b.cv_cd_sphr_id
+                              AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+                LEFT JOIN cvcd_cd_cat_m C
+                          ON A.hlv_cv_cd_cat_id = C.cv_cd_cat_id
+                              AND C.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        WHERE
+            A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+          AND A.cv_cd_cat_id = #{id}
+    </select>
+
+
+    <select id="getChildIdList" resultType="java.lang.String" parameterType="java.lang.String">
+        WITH RECURSIVE cvcd_cd_cat_m_tree ( cv_cd_cat_id ) AS (
+            SELECT
+                A.cv_cd_cat_id
+            FROM
+                cvcd_cd_cat_m A
+            WHERE
+                A.hlv_cv_cd_cat_id = #{id}
+              AND A.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+            UNION ALL
+            SELECT
+                b.cv_cd_cat_id
+            FROM
+                cvcd_cd_cat_m b
+                    JOIN cvcd_cd_cat_m_tree C ON b.hlv_cv_cd_cat_id = C.cv_cd_cat_id
+                    AND b.rec_fnsh_dttm = '9999-12-31 00:00:00.000000'
+        )
+        SELECT
+            cv_cd_cat_id
+        FROM
+            cvcd_cd_cat_m_tree
+    </select>
+
+
+</mapper>
